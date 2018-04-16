@@ -5,10 +5,12 @@ import { Redirect, withRouter } from 'react-router';
 import { db } from '../../utils';
 import AppLoader from '../Loaders/AppLoader';
 import Component from './Component';
+import {answerSortActions} from "../../modules/answerSort/index";
 
 const mapDispatchToProps = (dispatch) => ({
-  setAnswerSorting: () => {
+  setAnswerSorting: (e) => {
     // TODO: CODE FOR YOUR HOMEWORK HERE
+    dispatch(answerSortActions.setAnswerSort(e.target.value));
   }
 });
 

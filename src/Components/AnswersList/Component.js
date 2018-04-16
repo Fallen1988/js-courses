@@ -1,7 +1,6 @@
 import React from 'react';
 import styled, { css } from 'styled-components';
 
-
 const Answers = styled.ul`
   display: flex;
   flex-direction: column;
@@ -91,7 +90,7 @@ const AnswerBottomWrapper = styled.div`
 const AnswerBottom = styled.span``;
 
 
-const votesByAnswerId = (votes, answerId) => votes.filter(vote => vote.answerId === answerId)
+const votesByAnswerId = (votes, answerId) => votes.filter(vote => vote.answerId === answerId);
 
 const divideVotes = votes => {
   const positive = votes.filter(vote => vote.isPositive).length;
@@ -106,9 +105,56 @@ const divideByAnswerId = (votes, answerId) => divideVotes(votesByAnswerId(votes,
 const getAuthor = (users, authorId) => users.find(user => user._id === authorId)
   || { profile: { fullName: 'Anonymous' } };
 
-const AnswersList = ({ answers, votes, users, onVote, user }) => (
+const answersFilteredByVotes = (votes, filter, likes, answers) => {
+  let filteredPositive = [];
+  let filteredNegative = [];
+  answers.filter(answer => {
+    for(let id in likes) {
+      if(answer._id === id){
+        if(likes[id].positive > likes[id].negative){
+          filteredPositive.push(answer);
+        }else if(likes[id].positive < likes[id].negative){
+          filteredNegative.push(answer);
+        }else{
+          return '';
+        }
+      }
+    }
+  });
+  return filter ? filteredPositive : filteredNegative;
+};
+
+const getLikes = (votes, likes) => {
+  votes.forEach(vote => {
+    if (undefined === likes[vote.answerId]) {
+      likes[vote.answerId] = {positive: vote.isPositive ? 1 : 0, negative: vote.isPositive ? 0 : 1};
+    }else{
+      if (vote.isPositive) {
+        likes[vote.answerId].positive += 1;
+      }else{
+        likes[vote.answerId].negative += 1;
+      }
+    }
+  });
+};
+
+const getAnswers = (answers , votes, sortBy) => {
+  let likes = {};
+  getLikes(votes, likes);
+
+  switch (sortBy) {
+    case 'best':
+      return answersFilteredByVotes(votes, true, likes, answers);
+    case 'worst':
+      return answersFilteredByVotes(votes, false, likes, answers);
+    default:
+      return answers.reverse();
+  }
+};
+
+const AnswersList = ({ answers, votes, users, onVote, user, sortBy }) => (
   <Answers>
-    {answers.map(answer => {
+    {getAnswers(answers , votes, sortBy).map(answer => {
       const { positive, negative } = divideByAnswerId(votes, answer._id);
       const author = getAuthor(users, answer.createdById);
       return (
